@@ -14,6 +14,18 @@ with the **Claude API** acting as an intelligent judge-enhancer agent.
 This implements a **judge-enhancer agent pattern**, a common architecture in 
 production LLM systems for quality assurance and cost optimization.
 
+## Error Handling
+
+Each pipeline step is wrapped in its own error handling so a single failure 
+doesn't crash the interactive session:
+
+- If Ollama isn't running or the local draft call fails, the agent prints a 
+  clear error and returns to the prompt instead of crashing.
+- If the Claude call fails, or returns no usable text (e.g. it uses its full 
+  token budget on extended thinking and never emits a text block), the agent 
+  reports the failure — including the API's `stop_reason` when available — 
+  rather than throwing an unhandled exception.
+
 ## Tech Stack
 
 - Python 3.x

@@ -50,12 +50,15 @@ ENHANCED RESPONSE:
 [your improved response]"""
 
     response = claude_client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=1024,
+        model="claude-sonnet-5",
+        max_tokens=4096,
         messages=[{"role": "user", "content": prompt}]
     )
 
-    raw = response.content[0].text
+    text_block = next((block for block in response.content if block.type == "text"), None)
+    if text_block is None:
+        raise ValueError(f"Claude returned no text content (stop_reason: {response.stop_reason})")
+    raw = text_block.text
 
     # Parse the structured response
     lines = raw.split("\n")
@@ -82,11 +85,19 @@ def run_agent(query: str):
     print(f"{'=' * 60}")
 
     # Step 1: Local draft
-    draft = get_mistral_draft(query)
+    try:
+        draft = get_mistral_draft(query)
+    except Exception as e:
+        print(f"\n❌ Failed to get Mistral draft (is Ollama running?): {e}")
+        return
     print(f"\n📝 MISTRAL DRAFT:\n{draft}")
 
     # Step 2: Claude enhancement
-    result = get_claude_enhancement(query, draft)
+    try:
+        result = get_claude_enhancement(query, draft)
+    except Exception as e:
+        print(f"\n❌ Failed to get Claude enhancement: {e}")
+        return
 
     print(f"\n⚖️  CLAUDE'S SCORE: {result['score']}")
     print(f"\n🔍 WEAKNESSES IDENTIFIED:\n{result['weaknesses']}")
