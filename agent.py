@@ -5,7 +5,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Local Mistral via Ollama (OpenAI-compatible API)
+
+def _env_flag(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
+# Local model served by Ollama. Override with LOCAL_MODEL in your environment or .env.
+LOCAL_MODEL = os.getenv("LOCAL_MODEL", "hf.co/dphn/dolphin-2.9.3-mistral-nemo-12b-gguf:Q4_K_M")
+
+# When false, skip the Claude judge/enhancer and keep everything local.
+USE_CLAUDE_JUDGE = _env_flag("USE_CLAUDE_JUDGE", True)
+
+# Local model via Ollama (OpenAI-compatible API)
 local_client = OpenAI(
     base_url="http://localhost:11434/v1",
     api_key="ollama"  # Ollama doesn't need a real key
@@ -17,11 +31,11 @@ claude_client = anthropic.Anthropic(
 )
 
 
-def get_mistral_draft(query: str) -> str:
-    """Step 1: Get a fast local draft from Mistral."""
-    print("\n🔵 Mistral drafting response...")
+def get_local_draft(query: str) -> str:
+    """Step 1: Get a fast local draft from the local model."""
+    print(f"\n🔵 {LOCAL_MODEL} drafting response...")
     response = local_client.chat.completions.create(
-        model="mistral",
+        model=LOCAL_MODEL,
         messages=[{"role": "user", "content": query}]
     )
     return response.choices[0].message.content
@@ -86,11 +100,15 @@ def run_agent(query: str):
 
     # Step 1: Local draft
     try:
-        draft = get_mistral_draft(query)
+        draft = get_local_draft(query)
     except Exception as e:
-        print(f"\n❌ Failed to get Mistral draft (is Ollama running?): {e}")
+        print(f"\n❌ Failed to get local draft (is Ollama running and is '{LOCAL_MODEL}' pulled?): {e}")
         return
-    print(f"\n📝 MISTRAL DRAFT:\n{draft}")
+    print(f"\n📝 LOCAL DRAFT ({LOCAL_MODEL}):\n{draft}")
+
+    if not USE_CLAUDE_JUDGE:
+        print(f"\n{'=' * 60}\n")
+        return
 
     # Step 2: Claude enhancement
     try:
@@ -107,7 +125,12 @@ def run_agent(query: str):
 
 def main():
     print("🤖 LLM Judge-Enhancer Agent")
-    print("Local model: Mistral 7B | Judge: Claude Sonnet")
+    if USE_CLAUDE_JUDGE:
+        print(f"Local model: {LOCAL_MODEL} | Judge: Claude Sonnet")
+        print("⚠️  Local drafts are sent to Anthropic's API for judging. "
+              "Set USE_CLAUDE_JUDGE=false to keep everything local.")
+    else:
+        print(f"Local model: {LOCAL_MODEL} | Judge: disabled (fully local)")
     print("Type 'quit' to exit\n")
 
     while True:
