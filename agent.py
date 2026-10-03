@@ -14,7 +14,7 @@ def _env_flag(name: str, default: bool) -> bool:
 
 
 # Local model served by Ollama. Override with LOCAL_MODEL in your environment or .env.
-LOCAL_MODEL = os.getenv("LOCAL_MODEL", "CognitiveComputations/dolphin-mistral-nemo:12b")
+LOCAL_MODEL = os.getenv("LOCAL_MODEL", "hf.co/dphn/dolphin-2.9.3-mistral-nemo-12b-gguf:Q4_K_M")
 
 # When false, skip the Claude judge/enhancer and keep everything local.
 USE_CLAUDE_JUDGE = _env_flag("USE_CLAUDE_JUDGE", True)

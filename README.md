@@ -39,9 +39,13 @@ doesn't crash the interactive session:
 
 1. Install [Ollama](https://ollama.com) and pull the default local model:
 ```bash
-ollama pull CognitiveComputations/dolphin-mistral-nemo:12b
+ollama pull hf.co/dphn/dolphin-2.9.3-mistral-nemo-12b-gguf:Q4_K_M
 ```
 Any Ollama model works; see [Configuration](#configuration).
+
+> Note: the `CognitiveComputations/dolphin-mistral-nemo` model in the Ollama library 
+> fails to load on current Ollama (`unknown pre-tokenizer type: 'dolphin12b'`), so the 
+> official fixed GGUF from Hugging Face is used instead.
 
 2. Clone this repo and install dependencies:
 ```bash
@@ -64,7 +68,7 @@ Set these in your environment or `.env` (which is git-ignored):
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `LOCAL_MODEL` | `CognitiveComputations/dolphin-mistral-nemo:12b` | Ollama model tag used for the local draft |
+| `LOCAL_MODEL` | `hf.co/dphn/dolphin-2.9.3-mistral-nemo-12b-gguf:Q4_K_M` | Ollama model tag used for the local draft |
 | `USE_CLAUDE_JUDGE` | `true` | Set to `false` to skip the Claude judge and keep everything local |
 
 Example: run fully local with the stock model:
