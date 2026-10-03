@@ -1,14 +1,15 @@
 # LLM Judge-Enhancer Agent
 
-A hybrid AI pipeline that combines a **local open-source LLM** (Mistral 7B via Ollama) 
-with the **Claude API** acting as an intelligent judge-enhancer agent.
+A hybrid AI pipeline that combines a **local open-source LLM** (served by Ollama; 
+defaults to Dolphin Mistral Nemo 12B) with the **Claude API** acting as an intelligent 
+judge-enhancer agent. Both the local model and the Claude judge step are configurable.
 
 ## How It Works
 
 1. User submits a query
-2. **Mistral 7B** (running locally) generates a fast draft response
-3. **Claude Sonnet** evaluates the draft — scoring it, identifying weaknesses, 
-   and producing an enhanced version
+2. The **local model** (running via Ollama) generates a fast draft response
+3. **Claude Sonnet** (optional, on by default) evaluates the draft — scoring it, 
+   identifying weaknesses, and producing an enhanced version
 4. Both outputs are displayed for comparison
 
 This implements a **judge-enhancer agent pattern**, a common architecture in 
@@ -30,23 +31,24 @@ doesn't crash the interactive session:
 
 - Python 3.x
 - [Ollama](https://ollama.com) — local LLM inference
-- Mistral 7B — local open-source model
-- Anthropic Claude API — judge/enhancer agent
+- Local open-source model via Ollama (default: Dolphin Mistral Nemo 12B)
+- Anthropic Claude API — judge/enhancer agent (optional)
 - PyCharm — IDE
 
 ## Setup
 
-1. Install [Ollama](https://ollama.com) and pull Mistral:
+1. Install [Ollama](https://ollama.com) and pull the default local model:
 ```bash
-ollama pull mistral
+ollama pull CognitiveComputations/dolphin-mistral-nemo:12b
 ```
+Any Ollama model works; see [Configuration](#configuration).
 
 2. Clone this repo and install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file with your Anthropic API key:
+3. Create a `.env` file with your Anthropic API key (and any optional settings):
 ```
 ANTHROPIC_API_KEY=your_key_here
 ```
@@ -56,10 +58,33 @@ ANTHROPIC_API_KEY=your_key_here
 python agent.py
 ```
 
+## Configuration
+
+Set these in your environment or `.env` (which is git-ignored):
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `LOCAL_MODEL` | `CognitiveComputations/dolphin-mistral-nemo:12b` | Ollama model tag used for the local draft |
+| `USE_CLAUDE_JUDGE` | `true` | Set to `false` to skip the Claude judge and keep everything local |
+
+Example: run fully local with the stock model:
+```
+LOCAL_MODEL=mistral
+USE_CLAUDE_JUDGE=false
+```
+
+**Privacy note:** when `USE_CLAUDE_JUDGE` is `true`, each local draft is sent to 
+Anthropic's API and is subject to Anthropic's usage policies. Claude may also decline 
+or rewrite content it considers out of policy. If you are generating content you 
+want to keep local, set `USE_CLAUDE_JUDGE=false`.
+
+Some community models are uncensored. You are responsible for the content you 
+generate with them.
+
 ## Why This Architecture?
 
 Local models are fast and free to run but vary in quality. Cloud models like Claude 
 are highly capable but have per-token costs. This pipeline gets the best of both: 
-Mistral handles the initial generation cheaply, and Claude only intervenes to 
+the local model handles the initial generation cheaply, and Claude only intervenes to 
 evaluate and improve — a pattern used in production AI systems for cost efficiency 
 and quality control.
